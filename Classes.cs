@@ -7,11 +7,11 @@ namespace GestionPrets
     // Classe abstraite Utilisateur (inchangée)
     public abstract class Utilisateur
     {
-        protected int Id { get; set; }
-        protected string Nom { get; set; }
-        protected string Email { get; set; }
-        protected string MotDePasse { get; set; }
-        protected DateTime DateCreation { get; set; }
+        public int Id { get; set; }
+        public string Nom { get; set; }
+        public string Email { get; set; }
+        public string MotDePasse { get; set; }
+        public DateTime DateCreation { get; set; }
 
         public Utilisateur(int id, string nom, string email, string motDePasse)
         {
@@ -103,11 +103,11 @@ namespace GestionPrets
     // Classe Emprunteur (mis à jour avec historique et alertes)
     public class Emprunteur : Utilisateur
     {
-        private string NumeroIdentite { get; set; }
-        private string Telephone { get; set; }
-        private string Adresse { get; set; }
-        private decimal ScoreCredit { get; set; }
-        private List<Pret> mesPrets { get; set; }
+        public string NumeroIdentite { get; set; }
+        public string Telephone { get; set; }
+        public string Adresse { get; set; }
+        public decimal ScoreCredit { get; set; }
+        public List<Pret> mesPrets { get; set; }
 
         public Emprunteur(int id, string nom, string email, string motDePasse, string numeroIdentite, string telephone, string adresse, decimal scoreCredit)
             : base(id, nom, email, motDePasse)
@@ -181,95 +181,131 @@ namespace GestionPrets
     // Classe Pret (mis à jour avec calculs complets et suivi)
     public class Pret
     {
-        public int Id { get; set; }
+        public int Id { get; set; } 
         public string NomEmprunteur { get; set; }
         public int EmprunteurId { get; set; }
         public decimal MontantPrincipal { get; set; }
-        public decimal TauxInteret { get; set; }
+        public decimal TauxInteret { get; set; } 
         public double DureeAnnees { get; set; }
         public TypeCalcul TypeCalcul { get; set; }
         public StatutPret Statut { get; set; }
         public DateTime DateCreation { get; set; }
-        public List<DateTime> Echeances { get; set; } // Liste des dates d'échéance mensuelles
-        public decimal MontantTotalAPayer { get; set; } // Calculé lors de la création
+        public List<DateTime> Echeances { get; set; }
+        public decimal MontantTotalAPayer { get; set; }
 
-        public Pret(int id, string nomEmprunteur, int emprunteurId, decimal montantPrincipal, decimal tauxInteret, double dureeAnnees, TypeCalcul typeCalcul)
+
+        public Pret(string nomEmprunteur,
+                    int emprunteurId,
+                    decimal montantPrincipal,
+                    decimal tauxInteret,
+                    double dureeAnnees,
+                    TypeCalcul typeCalcul)
         {
-            Id = id;
             NomEmprunteur = nomEmprunteur;
             EmprunteurId = emprunteurId;
             MontantPrincipal = montantPrincipal;
             TauxInteret = tauxInteret;
             DureeAnnees = dureeAnnees;
             TypeCalcul = typeCalcul;
+
             Statut = StatutPret.Actif;
             DateCreation = DateTime.Now;
+
             Echeances = GenererEcheances();
             MontantTotalAPayer = CalculerMontantTotal();
+        }
+
+        public Pret(int id,
+                    string nomEmprunteur,
+                    int emprunteurId,
+                    decimal montantPrincipal,
+                    decimal tauxInteret,
+                    double dureeAnnees,
+                    TypeCalcul typeCalcul)
+            : this(nomEmprunteur, emprunteurId, montantPrincipal, tauxInteret, dureeAnnees, typeCalcul)
+        {
+            Id = id;
         }
 
         private List<DateTime> GenererEcheances()
         {
             var echeances = new List<DateTime>();
-            for (int i = 1; i <= (int)(DureeAnnees * 12); i++)
+            int totalMois = (int)(DureeAnnees * 12);
+
+            for (int i = 1; i <= totalMois; i++)
             {
                 echeances.Add(DateCreation.AddMonths(i));
             }
+
             return echeances;
         }
 
         public decimal CalculerMontantTotal()
         {
-            if (TypeCalcul == TypeCalcul.Simple)
+            return TypeCalcul switch
             {
-                return MontantPrincipal + (MontantPrincipal * TauxInteret * (decimal)DureeAnnees);
-            }
-            else if (TypeCalcul == TypeCalcul.Compose)
-            {
-                return MontantPrincipal * (decimal)Math.Pow((double)(1 + TauxInteret), DureeAnnees);
-            }
-            else // Amortissement
-            {
-                decimal mensualite = CalculerMensualite();
-                return mensualite * (decimal)(DureeAnnees * 12);
-            }
+                TypeCalcul.Simple =>
+                    MontantPrincipal + (MontantPrincipal * TauxInteret * (decimal)DureeAnnees),
+
+                TypeCalcul.Compose =>
+                    MontantPrincipal *
+                    (decimal)Math.Pow((double)(1 + TauxInteret), DureeAnnees),
+
+                TypeCalcul.Amortissement =>
+                    CalculerMensualite() * (int)(DureeAnnees * 12),
+
+                _ => MontantPrincipal
+            };
         }
 
         public decimal CalculerMensualite()
         {
-            if (TypeCalcul == TypeCalcul.Amortissement)
-            {
-                decimal i = TauxInteret / 12; // Taux mensuel
-                int n = (int)(DureeAnnees * 12); // Nombre de mensualités
-                return (MontantPrincipal * i) / (1 - (decimal)Math.Pow((double)(1 + i), -n));
-            }
-            return 0;
+            if (TypeCalcul != TypeCalcul.Amortissement)
+                return 0;
+
+            int n = (int)(DureeAnnees * 12);
+            if (n == 0)
+                return 0;
+
+            decimal i = TauxInteret / 12;
+
+            if (i == 0)
+                return MontantPrincipal / n;
+
+            return (MontantPrincipal * i) /
+                   (1 - (decimal)Math.Pow((double)(1 + i), -n));
         }
 
         public decimal PourcentagePaye(List<Paiement> paiements)
         {
-            decimal totalPaye = paiements.Where(p => p.PretId == Id).Sum(p => p.Montant);
-            return (totalPaye / MontantTotalAPayer) * 100;
+            decimal totalPaye =
+                paiements.Where(p => p.PretId == Id).Sum(p => p.Montant);
+
+            return MontantTotalAPayer == 0
+                ? 0
+                : (totalPaye / MontantTotalAPayer) * 100;
         }
 
-        // Overload: version that takes the system payments
         public bool EstEnRetard(List<Paiement> paiements)
         {
-            var derniereEcheance = Echeances.LastOrDefault(e => e < DateTime.Now);
-            if (derniereEcheance != default)
-            {
-                var paiementsPourEcheance = paiements.Where(p => p.PretId == Id && p.Date <= derniereEcheance.AddDays(30)).Sum(p => p.Montant);
-                return paiementsPourEcheance < CalculerMensualite(); // Simplifié
-            }
-            return false;
+            var derniereEcheance =
+                Echeances.LastOrDefault(e => e < DateTime.Now);
+
+            if (derniereEcheance == default)
+                return false;
+
+            decimal payePourEcheance =
+                paiements
+                    .Where(p =>
+                        p.PretId == Id &&
+                        p.Date <= derniereEcheance.AddDays(30))
+                    .Sum(p => p.Montant);
+
+            return payePourEcheance < CalculerMensualite();
         }
 
-        // Parameterless overload used by some callers; defaults to not-retard (requires system payments for accurate check)
-        public bool EstEnRetard()
-        {
-            // Cannot determine without payments list; return false to avoid false positives.
-            return false;
-        }
+        // Fallback when payments are not provided
+        public bool EstEnRetard() => false;
 
         public void MettreAJourStatut(StatutPret nouveauStatut)
         {
@@ -283,7 +319,9 @@ namespace GestionPrets
 
         public decimal ResteAPayer(List<Paiement> paiements)
         {
-            decimal totalPaye = paiements.Where(p => p.PretId == Id).Sum(p => p.Montant);
+            decimal totalPaye =
+                paiements.Where(p => p.PretId == Id).Sum(p => p.Montant);
+
             return MontantTotalAPayer - totalPaye;
         }
     }

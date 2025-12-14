@@ -30,7 +30,7 @@ namespace GestionPrets
         {
             this.txtId = new System.Windows.Forms.TextBox();
             this.txtNomEmprunteur = new System.Windows.Forms.TextBox();
-            this.txtEmprunteurId = new System.Windows.Forms.TextBox();
+            this.cmbEmprunteur = new System.Windows.Forms.ComboBox();
             this.txtMontantPrincipal = new System.Windows.Forms.TextBox();
             this.txtTauxInteret = new System.Windows.Forms.TextBox();
             this.txtDureeAnnees = new System.Windows.Forms.TextBox();
@@ -76,12 +76,13 @@ namespace GestionPrets
             this.txtNomEmprunteur.Size = new System.Drawing.Size(100, 20);
             this.txtNomEmprunteur.TabIndex = 1;
             // 
-            // txtEmprunteurId
+            // cmbEmprunteur
             // 
-            this.txtEmprunteurId.Location = new System.Drawing.Point(200, 80);
-            this.txtEmprunteurId.Name = "txtEmprunteurId";
-            this.txtEmprunteurId.Size = new System.Drawing.Size(100, 20);
-            this.txtEmprunteurId.TabIndex = 2;
+            this.cmbEmprunteur.FormattingEnabled = true;
+            this.cmbEmprunteur.Location = new System.Drawing.Point(200, 80);
+            this.cmbEmprunteur.Name = "cmbEmprunteur";
+            this.cmbEmprunteur.Size = new System.Drawing.Size(200, 21);
+            this.cmbEmprunteur.TabIndex = 2;
             // 
             // txtMontantPrincipal
             // 
@@ -266,7 +267,7 @@ namespace GestionPrets
             this.labelEmprunteurId.Name = "labelEmprunteurId";
             this.labelEmprunteurId.Size = new System.Drawing.Size(80, 13);
             this.labelEmprunteurId.TabIndex = 16;
-            this.labelEmprunteurId.Text = "Emprunteur Id:";
+            this.labelEmprunteurId.Text = "Emprunteur :";
             // 
             // labelMontantPrincipal
             // 
@@ -327,11 +328,12 @@ namespace GestionPrets
             this.Controls.Add(this.txtDureeAnnees);
             this.Controls.Add(this.txtTauxInteret);
             this.Controls.Add(this.txtMontantPrincipal);
-            this.Controls.Add(this.txtEmprunteurId);
+            this.Controls.Add(this.cmbEmprunteur);
             this.Controls.Add(this.txtNomEmprunteur);
             this.Controls.Add(this.txtId);
             this.Name = "PretForm";
             this.Text = "Gestion des Prêts";
+            this.Load += new System.EventHandler(this.PretForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dgvPrets)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -342,7 +344,7 @@ namespace GestionPrets
 
         private System.Windows.Forms.TextBox txtId;
         private System.Windows.Forms.TextBox txtNomEmprunteur;
-        private System.Windows.Forms.TextBox txtEmprunteurId;
+        private System.Windows.Forms.ComboBox cmbEmprunteur;
         private System.Windows.Forms.TextBox txtMontantPrincipal;
         private System.Windows.Forms.TextBox txtTauxInteret;
         private System.Windows.Forms.TextBox txtDureeAnnees;
